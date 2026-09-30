@@ -71,3 +71,9 @@ def root():
         "note": "See whatsapp_mock/index.html for the coordinator chat UI, "
                 "and dashboard/streamlit_app.py for the read-only dashboard.",
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))
