@@ -156,7 +156,7 @@ def page_matchings():
         if circle:
             for d in circle["donors"]:
                 color = {"donating": "#28a745", "eligible": "#5bc0de", "not_eligible": "#ccc"}[d["state"]]
-                dots += f"<span title='{d[\"name\"]} ({d[\"state\"]})' style='color:{color}'>●</span> "
+                dots += f"<span title='{d['name']} ({d['state']})' style='color:{color}'>●</span> "
 
         with st.container(border=True):
             c1, c2, c3, c4 = st.columns([2, 3, 2, 2])
