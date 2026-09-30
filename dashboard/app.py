@@ -10,10 +10,12 @@ from datetime import date, datetime
 
 import requests
 import streamlit as st
+from dotenv import load_dotenv
 
+load_dotenv()
 st.set_page_config(page_title="Blood Warriors — Coordinator Dashboard", layout="wide")
 
-BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
+BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 
 STATUS_COLORS = {
     "due": "#9e9e9e", "proposed": "#f0ad4e", "approved": "#5bc0de",
@@ -50,7 +52,7 @@ st.sidebar.markdown("---")
 st.sidebar.caption(f"Synced with WhatsApp bot\n{datetime.now().strftime('%I:%M %p')}")
 with st.sidebar.expander("Settings"):
     st.text_input("Backend URL", value=BACKEND, key="backend_url_display", disabled=True)
-    st.caption("Set BACKEND_URL env var to change.")
+    st.caption("Set BACKEND_URL in the dashboard environment or .env file to change.")
 
 
 # ---------------------------------------------------------------- Overview
