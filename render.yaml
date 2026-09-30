@@ -1,7 +1,15 @@
 services:
   - type: web
-    name: blood-warriors-api
+    name: blood-warriors-backend
     runtime: python
+    plan: free
     rootDir: backend
-    buildCommand: pip install -r app/requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DEMO_REPLY_WINDOW_SECONDS
+        value: "30"
