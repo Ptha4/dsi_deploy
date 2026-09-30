@@ -5,15 +5,24 @@ algorithm, the reply-window timers and the WhatsApp webhook all run in this
 one service."
 """
 import os
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .database import Base, engine, SessionLocal
-from .routers import cycles, activity, emergency, whatsapp, demo, patients
-from . import outreach
+if __package__:
+    from .database import Base, engine, SessionLocal
+    from .routers import cycles, activity, emergency, whatsapp, demo, patients
+    from . import outreach
+else:
+    # Allows `python3 main.py` when Render's root directory is backend/app.
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from app.database import Base, engine, SessionLocal
+    from app.routers import cycles, activity, emergency, whatsapp, demo, patients
+    from app import outreach
 
 scheduler = BackgroundScheduler(timezone="UTC")
 
