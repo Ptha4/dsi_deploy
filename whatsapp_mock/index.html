@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blood Warriors — Coordinator WhatsApp (mock)</title>
+<style>
+  :root {
+    --wa-green: #128C7E;
+    --wa-green-dark: #075E54;
+    --wa-bg: #e5ddd5;
+    --bubble-out: #dcf8c6;
+    --bubble-in: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #0b141a;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .phone {
+    width: 400px; height: 780px; background: var(--wa-bg);
+    display: flex; flex-direction: column;
+    border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  header {
+    background: var(--wa-green-dark); color: white; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  header .avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #b53737;
+    display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+  }
+  header .title { font-weight: 600; font-size: 15px; }
+  header .subtitle { font-size: 12px; opacity: 0.85; }
+  header .spacer { flex: 1; }
+  header .icon-btn {
+    background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 4px 8px;
+  }
+
+  #chat {
+    flex: 1; overflow-y: auto; padding: 14px 10px;
+    background-image: linear-gradient(rgba(229,221,213,0.4), rgba(229,221,213,0.4));
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .day-label {
+    align-self: center; background: #e1f2fb; color: #556; font-size: 11.5px;
+    padding: 4px 10px; border-radius: 8px; margin: 8px 0;
+  }
+  .bubble {
+    max-width: 84%; padding: 8px 10px; border-radius: 8px; font-size: 13.5px;
+    line-height: 1.45; white-space: pre-wrap; word-wrap: break-word;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+    position: relative;
+  }
+  .bubble.out { align-self: flex-end; background: var(--bubble-out); border-top-right-radius: 0; }
+  .bubble.in  { align-self: flex-start; background: var(--bubble-in); border-top-left-radius: 0; }
+  .bubble .meta {
+    display: block; text-align: right; font-size: 10.5px; color: #8a8a8a; margin-top: 3px;
+  }
+  .bubble .donor-actions {
+    margin-top: 8px; display: flex; gap: 6px;
+  }
+  .bubble .donor-actions button {
+    flex: 1; border: none; border-radius: 6px; padding: 6px 8px; font-size: 12px; cursor: pointer;
+  }
+  .btn-yes { background: #25D366; color: white; }
+  .btn-no  { background: #eee; color: #333; }
+
+  .quick-replies {
+    display: flex; gap: 6px; padding: 6px 10px; flex-wrap: wrap; background: #f0f0f0; flex-shrink: 0;
+  }
+  .quick-replies button {
+    background: white; border: 1px solid #ddd; border-radius: 14px; padding: 5px 11px;
+    font-size: 12px; cursor: pointer; color: var(--wa-green-dark);
+  }
+
+  form#composer {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f0f0f0; flex-shrink: 0;
+  }
+  #composer input[type=text] {
+    flex: 1; border: none; border-radius: 20px; padding: 10px 14px; font-size: 13.5px; outline: none;
+  }
+  #composer button {
+    background: var(--wa-green); border: none; color: white; border-radius: 50%;
+    width: 38px; height: 38px; font-size: 16px; cursor: pointer; flex-shrink: 0;
+  }
+
+  #settings-panel {
+    position: fixed; top: 16px; right: 16px; background: white; border-radius: 10px;
+    padding: 12px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 12.5px; width: 230px;
+    display: none;
+  }
+  #settings-panel.open { display: block; }
+  #settings-panel label { display: block; margin-bottom: 4px; font-weight: 600; color: #333; }
+  #settings-panel input {
+    width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 12px; margin-bottom: 8px;
+  }
+  #settings-panel button.small {
+    width: 100%; padding: 6px; border: none; border-radius: 6px; background: var(--wa-green);
+    color: white; cursor: pointer; font-size: 12px;
+  }
+  #status-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <header>
+    <div class="avatar">BW</div>
+    <div>
+      <div class="title">Blood Warriors Bot</div>
+      <div class="subtitle">Coordinator console</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" onclick="toggleSettings()" title="Settings">⋮</button>
+  </header>
+
+  <div id="chat"></div>
+
+  <div class="quick-replies">
+    <button onclick="sendPreset('/upcoming')">/upcoming</button>
+    <button onclick="sendPreset('/matches')">/matches</button>
+    <button onclick="sendPreset('/assign')">/assign</button>
+    <button onclick="sendPreset('CONFIRM ALL')">CONFIRM ALL</button>
+  </div>
+
+  <form id="composer" onsubmit="return onSend(event)">
+    <input type="text" id="msg-input" placeholder="Message" autocomplete="off">
+    <button type="submit">➤</button>
+  </form>
+</div>
+
+<div id="settings-panel">
+  <label><span id="status-dot" style="background:#999"></span>Backend URL</label>
+  <input type="text" id="backend-url" placeholder="http://127.0.0.1:8000">
+  <button class="small" onclick="saveSettings()">Save & reconnect</button>
+  <div style="margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
+    <button class="small" style="background:#b53737" onclick="resetDemo()">Reset demo data</button>
+  </div>
+</div>
+
+<script>
+let BACKEND = localStorage.getItem('bw_backend') || 'http://127.0.0.1:8000';
+let lastSeenLogId = 0;
+let pollTimer = null;
+
+const chatEl = document.getElementById('chat');
+const inputEl = document.getElementById('msg-input');
+
+function addDayLabelIfNeeded() {
+  if (!chatEl.querySelector('.day-label')) {
+    const d = document.createElement('div');
+    d.className = 'day-label';
+    d.textContent = 'Today';
+    chatEl.appendChild(d);
+  }
+}
+
+function nowTime() {
+  const d = new Date();
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function addBubble(text, direction, opts = {}) {
+  addDayLabelIfNeeded();
+  const b = document.createElement('div');
+  b.className = 'bubble ' + direction;
+  const textNode = document.createElement('span');
+  textNode.textContent = text;
+  b.appendChild(textNode);
+
+  if (opts.donorActions) {
+    const actions = document.createElement('div');
+    actions.className = 'donor-actions';
+    const yesBtn = document.createElement('button');
+    yesBtn.className = 'btn-yes';
+    yesBtn.textContent = `${opts.donorActions.donorName} says YES`;
+    yesBtn.onclick = () => simulateDonorReply(opts.donorActions.phone, true);
+    const noBtn = document.createElement('button');
+    noBtn.className = 'btn-no';
+    noBtn.textContent = 'says NO';
+    noBtn.onclick = () => simulateDonorReply(opts.donorActions.phone, false);
+    actions.appendChild(yesBtn);
+    actions.appendChild(noBtn);
+    b.appendChild(actions);
+  }
+
+  const meta = document.createElement('span');
+  meta.className = 'meta';
+  meta.textContent = nowTime();
+  b.appendChild(meta);
+
+  chatEl.appendChild(b);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+async function callWebhook(message, from) {
+  try {
+    const res = await fetch(`${BACKEND}/webhook/whatsapp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, from: from || 'coordinator' }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.reply;
+  } catch (e) {
+    return `⚠️ Couldn't reach the backend at ${BACKEND} — is it running? (${e.message})`;
+  }
+}
+
+async function onSend(evt) {
+  evt.preventDefault();
+  const text = inputEl.value.trim();
+  if (!text) return false;
+  addBubble(text, 'out');
+  inputEl.value = '';
+  const reply = await callWebhook(text, 'coordinator');
+
+  // If /assign just proposed donors, offer quick "simulate reply" buttons
+  // for whichever donor we just contacted, once CONFIRM ALL is sent — kept
+  // simple by fetching /demo/awaiting_reply right after.
+  addBubble(reply, 'in');
+  await maybeShowDonorSimulators();
+  return false;
+}
+
+function sendPreset(text) {
+  inputEl.value = text;
+  onSend(new Event('submit', { cancelable: true }));
+}
+
+async function maybeShowDonorSimulators() {
+  try {
+    const res = await fetch(`${BACKEND}/demo/awaiting_reply`);
+    if (!res.ok) return;
+    const data = await res.json();
+    for (const p of data.pending) {
+      const key = `shown_${p.cycle_id}_${p.donor_id}`;
+      if (sessionStorage.getItem(key)) continue;
+      sessionStorage.setItem(key, '1');
+      addBubble(
+        `(Demo) Simulate ${p.donor_name}'s reply for ${p.patient_name}:`,
+        'in',
+        { donorActions: { donorName: p.donor_name, phone: p.donor_phone } }
+      );
+    }
+  } catch (e) { /* backend not reachable — ignore */ }
+}
+
+async function simulateDonorReply(phone, accepted) {
+  const reply = await callWebhook(accepted ? 'yes' : 'no', phone);
+  addBubble(reply, 'in');
+}
+
+async function pollActivity() {
+  try {
+    const res = await fetch(`${BACKEND}/activity?since_id=${lastSeenLogId}`);
+    if (!res.ok) { setStatus(false); return; }
+    setStatus(true);
+    const data = await res.json();
+    // Surface donor confirmations / bot timeouts / flags as chat bubbles
+    // (these happen asynchronously — not in direct response to a coordinator
+    // message — so they're picked up here via polling instead).
+    for (const entry of data.entries) {
+      lastSeenLogId = Math.max(lastSeenLogId, entry.id);
+      if (entry.actor === 'donor' && entry.event === 'Confirmed') {
+        addBubble(`✅ ${entry.donor} confirmed for ${entry.patient}.`, 'in');
+      } else if (entry.actor === 'bot' && entry.event === 'Timed out') {
+        addBubble(`${entry.donor} hasn't responded in time.`, 'in');
+      } else if (entry.actor === 'bot' && entry.event === 'Flagged to coordinator') {
+        addBubble(`⚠️ Needs your attention\n${entry.detail}`, 'in');
+      }
+    }
+    await maybeShowDonorSimulators();
+  } catch (e) {
+    setStatus(false);
+  }
+}
+
+function setStatus(ok) {
+  const dot = document.getElementById('status-dot');
+  if (dot) dot.style.background = ok ? '#25D366' : '#cc3333';
+}
+
+function toggleSettings() {
+  const p = document.getElementById('settings-panel');
+  p.classList.toggle('open');
+  document.getElementById('backend-url').value = BACKEND;
+}
+
+function saveSettings() {
+  const val = document.getElementById('backend-url').value.trim();
+  if (val) {
+    BACKEND = val.replace(/\/$/, '');
+    localStorage.setItem('bw_backend', BACKEND);
+  }
+  toggleSettings();
+  pollActivity();
+}
+
+async function resetDemo() {
+  if (!confirm('Reset the demo data back to the walkthrough scenario?')) return;
+  await fetch(`${BACKEND}/demo/reset`, { method: 'POST' });
+  chatEl.innerHTML = '';
+  sessionStorage.clear();
+  lastSeenLogId = 0;
+  addBubble('Demo data reset. Try /upcoming to start.', 'in');
+}
+
+// Welcome message + start polling
+addBubble("Hi! I'm the Blood Warriors coordinator bot.\nTry /upcoming, /matches, /assign, or CONFIRM ALL.", 'in');
+pollTimer = setInterval(pollActivity, 3000);
+pollActivity();
+</script>
+
+</body>
+</html>
